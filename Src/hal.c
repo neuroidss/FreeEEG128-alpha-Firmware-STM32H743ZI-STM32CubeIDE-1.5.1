@@ -82,18 +82,21 @@ void MAP_GPIOPinWrite(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin, GPIO_PinState PinS
 //! \return None.
 //
 //*****************************************************************************
-uint16_t InitADC(ads131m0x_dev *dev)
+uint16_t InitADC(ads131m0x_dev *dev, bool reset)
 {
     // IMPORTANT: Make sure device is powered before setting GPIOs pins to HIGH state.
 
     // Initialize GPIOs pins used by ADS131M0x
-    InitGPIO(dev);
+	if(reset)
+	{
+	    InitGPIO(dev);
+	}
 
     // Initialize SPI peripheral used by ADS131M0x
     InitSPI(&dev->spi_dev);
 
     // Run ADC startup function
-    uint16_t response = adcStartup(dev);
+    uint16_t response = adcStartup(dev, reset);
     return response;
 }
 

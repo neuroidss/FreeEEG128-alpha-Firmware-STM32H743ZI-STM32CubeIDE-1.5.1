@@ -100,17 +100,23 @@ uint16_t getRegisterValue(ads131m0x_dev *dev, uint8_t address)
 //! \return None.
 //
 //*****************************************************************************
-uint16_t adcStartup(ads131m0x_dev *dev)
+uint16_t adcStartup(ads131m0x_dev *dev, bool reset)
 {
 	/* (OPTIONAL) Provide additional delay time for power supply settling */
 	delay_ms(50);
 
 	/* (REQUIRED) Set nRESET pin high for ADC operation */
-	setSYNC_RESET(dev, HIGH);
+	if(reset)
+	{
+		setSYNC_RESET(dev, HIGH);
+	}
 
 	/* (OPTIONAL) Toggle nRESET pin to ensure default register settings. */
 	/* NOTE: This also ensures that the device registers are unlocked.	 */
-	toggleRESET(dev);
+	if(reset)
+	{
+		toggleRESET(dev);
+	}
 
     /* (REQUIRED) Initialize internal 'registerMap' array with device default settings */
 	restoreRegisterDefaults(dev);
@@ -122,7 +128,6 @@ uint16_t adcStartup(ads131m0x_dev *dev)
 
 	/* (OPTIONAL) Define your initial register settings here */
 //    writeSingleRegister(dev, CLOCK_ADDRESS, (CLOCK_DEFAULT & ~CLOCK_OSR_MASK) | CLOCK_OSR_256);
-//    writeSingleRegister(dev, CLOCK_ADDRESS, (CLOCK_DEFAULT & ~CLOCK_OSR_MASK) | CLOCK_OSR_16384);
     writeSingleRegister(dev, CLOCK_ADDRESS, (CLOCK_DEFAULT
     		& ~CLOCK_OSR_MASK
 			& ~CLOCK_XTAL_DIS_MASK
@@ -149,13 +154,6 @@ uint16_t adcStartup(ads131m0x_dev *dev)
 			| GAIN2_PGAGAIN6_128
 			| GAIN2_PGAGAIN5_128
 			| GAIN2_PGAGAIN4_128);
-//    writeSingleRegister(dev, GAIN1_ADDRESS, (GAIN1_DEFAULT & ~GAIN1_PGAGAIN2_MASK) | GAIN1_PGAGAIN2_128);
-//    writeSingleRegister(dev, GAIN1_ADDRESS, (GAIN1_DEFAULT & ~GAIN1_PGAGAIN1_MASK) | GAIN1_PGAGAIN1_128);
-//    writeSingleRegister(dev, GAIN1_ADDRESS, (GAIN1_DEFAULT & ~GAIN1_PGAGAIN0_MASK) | GAIN1_PGAGAIN0_128);
-//    writeSingleRegister(dev, GAIN2_ADDRESS, (GAIN2_DEFAULT & ~GAIN2_PGAGAIN7_MASK) | GAIN2_PGAGAIN7_128);
-//    writeSingleRegister(dev, GAIN2_ADDRESS, (GAIN2_DEFAULT & ~GAIN2_PGAGAIN6_MASK) | GAIN2_PGAGAIN6_128);
-//    writeSingleRegister(dev, GAIN2_ADDRESS, (GAIN2_DEFAULT & ~GAIN2_PGAGAIN5_MASK) | GAIN2_PGAGAIN5_128);
-//    writeSingleRegister(dev, GAIN2_ADDRESS, (GAIN2_DEFAULT & ~GAIN2_PGAGAIN4_MASK) | GAIN2_PGAGAIN4_128);
 
     writeSingleRegister(dev, CH0_CFG_ADDRESS, (CH0_CFG_DEFAULT & ~CH0_CFG_MUX0_MASK) | CH0_CFG_MUX0_ADC_INPUT_SHORT);
     writeSingleRegister(dev, CH1_CFG_ADDRESS, (CH1_CFG_DEFAULT & ~CH1_CFG_MUX1_MASK) | CH1_CFG_MUX1_ADC_INPUT_SHORT);

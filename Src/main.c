@@ -2880,12 +2880,12 @@ int main(void)
 //      print7_text_line(">>ad7779_setup(&device1, init_param);");
 
       ads131m0x_setup(&device1, init_param);
-      uint16_t response = InitADC(device1);
+      uint16_t response = InitADC(device1, true);
 
-      print_line();
-      print_binary(response, 8);          print_symbol(';');          print_symbol(';');
+//      print_line();
+//      print_binary(response, 8);          print_symbol(';');          print_symbol(';');
 //          print_hex(status, 8);          print_symbol(';');          print_symbol(';');
-      print_line();
+//      print_line();
 //                  print7_hex(ad_adc1, 32);//          print2_symbol(';');
 //                  print7_symbol(';');
 
@@ -2926,7 +2926,7 @@ int main(void)
   //    HAL_GPIO_WritePin(init_param2.spi_dev.chip_select_port, init_param2.spi_dev.chip_select_pin, GPIO_PIN_SET);
 
       ads131m0x_setup(&device2, init_param2);
-      InitADC(device2);
+      InitADC(device2, false);
 
 //      ad7779_spi_int_reg_write_mask(device2,AD7779_REG_SRC_UPDATE,AD7779_SRC_LOAD_SOURCE,AD7779_DISABLE);
 //      ad7779_spi_int_reg_write_mask(device2,AD7779_REG_SRC_UPDATE,AD7779_SRC_LOAD_UPDATE,AD7779_ENABLE);
@@ -2970,7 +2970,7 @@ int main(void)
 //      init_param3.dec_rate_int = 0xfa0;//hr 0.512 kHz
 
       ads131m0x_setup(&device3, init_param3);
-      InitADC(device3);
+      InitADC(device3, false);
 
 //      ad7779_spi_int_reg_write_mask(device3,AD7779_REG_SRC_UPDATE,AD7779_SRC_LOAD_SOURCE,AD7779_DISABLE);
 //      ad7779_spi_int_reg_write_mask(device3,AD7779_REG_SRC_UPDATE,AD7779_SRC_LOAD_UPDATE,AD7779_ENABLE);
@@ -3010,7 +3010,7 @@ int main(void)
 //      init_param4.dec_rate_int = 0xfa0;//hr 0.512 kHz
 
       ads131m0x_setup(&device4, init_param4);
-      InitADC(device4);
+      InitADC(device4, false);
 
 //      ad7779_spi_int_reg_write_mask(device4,AD7779_REG_SRC_UPDATE,AD7779_SRC_LOAD_SOURCE,AD7779_DISABLE);
 //      ad7779_spi_int_reg_write_mask(device4,AD7779_REG_SRC_UPDATE,AD7779_SRC_LOAD_UPDATE,AD7779_ENABLE);
@@ -3849,7 +3849,43 @@ int main(void)
         {
             for(int ad_adc = 0; ad_adc < uint8_ad_adc_number; ad_adc ++)
             {
-              int address = readSingleRegister(devices[ad_adc], ID_ADDRESS);
+                writeSingleRegister(devices[ad_adc], CLOCK_ADDRESS, (CLOCK_DEFAULT
+                		& ~CLOCK_OSR_MASK
+            			& ~CLOCK_XTAL_DIS_MASK
+            			& ~CLOCK_EXTREF_EN_MASK)
+                		| CLOCK_OSR_16384
+            			| CLOCK_XTAL_DIS_DISABLED
+            			| CLOCK_EXTREF_EN_ENABLED);
+
+                writeSingleRegister(devices[ad_adc], GAIN1_ADDRESS, (GAIN1_DEFAULT
+                		& ~GAIN1_PGAGAIN3_MASK
+            			& ~GAIN1_PGAGAIN2_MASK
+            			& ~GAIN1_PGAGAIN1_MASK
+            			& ~GAIN1_PGAGAIN0_MASK)
+                		| GAIN1_PGAGAIN3_128
+            			| GAIN1_PGAGAIN2_128
+            			| GAIN1_PGAGAIN1_128
+            			| GAIN1_PGAGAIN0_128);
+                writeSingleRegister(devices[ad_adc], GAIN2_ADDRESS, (GAIN2_DEFAULT
+                		& ~GAIN2_PGAGAIN7_MASK
+            			& ~GAIN2_PGAGAIN6_MASK
+            			& ~GAIN2_PGAGAIN5_MASK
+            			& ~GAIN2_PGAGAIN4_MASK)
+                		| GAIN2_PGAGAIN7_128
+            			| GAIN2_PGAGAIN6_128
+            			| GAIN2_PGAGAIN5_128
+            			| GAIN2_PGAGAIN4_128);
+
+                writeSingleRegister(devices[ad_adc], CH0_CFG_ADDRESS, (CH0_CFG_DEFAULT & ~CH0_CFG_MUX0_MASK) | CH0_CFG_MUX0_ADC_INPUT_SHORT);
+                writeSingleRegister(devices[ad_adc], CH1_CFG_ADDRESS, (CH1_CFG_DEFAULT & ~CH1_CFG_MUX1_MASK) | CH1_CFG_MUX1_ADC_INPUT_SHORT);
+                writeSingleRegister(devices[ad_adc], CH2_CFG_ADDRESS, (CH2_CFG_DEFAULT & ~CH2_CFG_MUX2_MASK) | CH2_CFG_MUX2_ADC_INPUT_SHORT);
+                writeSingleRegister(devices[ad_adc], CH3_CFG_ADDRESS, (CH3_CFG_DEFAULT & ~CH3_CFG_MUX3_MASK) | CH3_CFG_MUX3_ADC_INPUT_SHORT);
+                writeSingleRegister(devices[ad_adc], CH4_CFG_ADDRESS, (CH4_CFG_DEFAULT & ~CH4_CFG_MUX4_MASK) | CH4_CFG_MUX4_ADC_INPUT_SHORT);
+                writeSingleRegister(devices[ad_adc], CH5_CFG_ADDRESS, (CH5_CFG_DEFAULT & ~CH5_CFG_MUX5_MASK) | CH5_CFG_MUX5_ADC_INPUT_SHORT);
+                writeSingleRegister(devices[ad_adc], CH6_CFG_ADDRESS, (CH6_CFG_DEFAULT & ~CH6_CFG_MUX6_MASK) | CH6_CFG_MUX6_ADC_INPUT_SHORT);
+                writeSingleRegister(devices[ad_adc], CH7_CFG_ADDRESS, (CH7_CFG_DEFAULT & ~CH7_CFG_MUX7_MASK) | CH7_CFG_MUX7_ADC_INPUT_SHORT);
+
+            	int address = readSingleRegister(devices[ad_adc], ID_ADDRESS);
               print_binary(address, 16);
               print_symbol(';');
     //          print_symbol(';');
@@ -4048,6 +4084,9 @@ int main(void)
 //    	                if((readSingleRegister(devices[3], STATUS_ADDRESS)&STATUS_DRDY0_MASK)==STATUS_DRDY0_NEW_DATA)
       {
     	            	flag_nDRDY_INTERRUPT=false;
+
+
+
 //          waitForDRDYinterrupt(device1, 5000, &flag_nDRDY_INTERRUPT);
 //    	  {
 //    		  uint32_t timeout_ms=5000;
@@ -4101,7 +4140,7 @@ int main(void)
           }
 
         if(1)
-//            for(int i = 0; i < 2; i ++)
+            for(int i = 0; i < 2; i ++)
         {
 //            const uint32_t uint8_data_number = 2 + 1 * 3 * 1 + 0 * 2 + 1;
 //              const uint32_t uint8_data_number = 2 + uint8_ad_chan_number * 3 * 4 + uint8_accel_chan_number * 2 + 1;
