@@ -480,8 +480,8 @@ External reference enable
 
     /* XTAL_DIS field mask & values */
     #define CLOCK_XTAL_DIS_MASK                                               ((uint16_t) 0x0080)
-    #define CLOCK_XTAL_DIS_DISABLED                                           ((uint16_t) 0x0000 << 7)
-    #define CLOCK_XTAL_DIS_ENABLED                                            ((uint16_t) 0x0001 << 7)    // DEFAULT
+    #define CLOCK_XTAL_DIS_ENABLED                                            ((uint16_t) 0x0000 << 7)    // DEFAULT
+    #define CLOCK_XTAL_DIS_DISABLED                                           ((uint16_t) 0x0001 << 7)
 
     /* EXTREF_EN field mask & values */
     #define CLOCK_EXTREF_EN_MASK                                               ((uint16_t) 0x0040)
@@ -1821,7 +1821,7 @@ typedef struct {
 //
 //****************************************************************************
 
-uint16_t        adcStartup(ads131m0x_dev *dev);
+uint16_t        adcStartup(ads131m0x_dev *dev, bool reset);
 uint16_t    sendCommand(ads131m0x_dev *dev, uint16_t op_code);
 bool        readData(ads131m0x_dev *dev, adc_channel_data *DataStruct);
 uint16_t    readSingleRegister(ads131m0x_dev *dev, uint8_t address);

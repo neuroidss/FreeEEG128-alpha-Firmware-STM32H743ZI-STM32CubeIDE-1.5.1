@@ -117,7 +117,7 @@
 //
 //*****************************************************************************
 
-uint16_t    InitADC(ads131m0x_dev *dev);
+uint16_t    InitADC(ads131m0x_dev *dev, bool reset);
 void    delay_ms(const uint32_t delay_time_ms);
 void    delay_us(const uint32_t delay_time_us);
 void    setCS(spi_device *spi_dev, const bool state);
