@@ -2989,10 +2989,10 @@ int main(void)
 //      init_param4.spi_dev.dev = &hspi2;
   //    init_param4.spi_dev.dev = &hspi3;
           init_param4.spi_dev.dev = &hspi3;
-//      init_param4.spi_dev.chip_select_port = SPI3_NSS3_GPIO_Port;
-//      init_param4.spi_dev.chip_select_pin = SPI3_NSS3_Pin;
-      init_param4.spi_dev.chip_select_port = SPI3_NSS_GPIO_Port;
-      init_param4.spi_dev.chip_select_pin = SPI3_NSS_Pin;
+      init_param4.spi_dev.chip_select_port = SPI3_NSS3_GPIO_Port;
+      init_param4.spi_dev.chip_select_pin = SPI3_NSS3_Pin;
+//      init_param4.spi_dev.chip_select_port = SPI3_NSS_GPIO_Port;
+//      init_param4.spi_dev.chip_select_pin = SPI3_NSS_Pin;
 //      init_param4.spi_dev.chip_select_port = SPI2_NSS_AD4_GPIO_Port;
 //      init_param4.spi_dev.chip_select_pin = SPI2_NSS_AD4_Pin;
   //    init_param4.spi_dev.dev = &hspi1;
@@ -3923,9 +3923,12 @@ int main(void)
         }
 
       if(FREEEEG32_OUT & FREEEEG32_ADS131M08_SPI_TEXT_UART1_INT)
-          if(readSingleRegister(devices[3], STATUS_ADDRESS)&STATUS_DRDY0_MASK==STATUS_DRDY0_NEW_DATA)
+//          if(readSingleRegister(devices[3], STATUS_ADDRESS)&STATUS_DRDY0_MASK==STATUS_DRDY0_NEW_DATA)
 //          if(SPI_RxCplt)
+          if(flag_nDRDY_INTERRUPT)
+          for(int i = 0; i < 2; i ++)
       {
+            	flag_nDRDY_INTERRUPT=false;
 //  		toggleRESET(devices[0]);
 //		toggleRESET(devices[1]);
 //		toggleRESET(devices[2]);
@@ -4125,18 +4128,34 @@ int main(void)
         	  addata24s[ad_adc].b5=0;
         	  addata24s[ad_adc].b6=0;
         	  addata24s[ad_adc].b7=0;
-            while (HAL_SPI_GetState(devices[ad_adc]->spi_dev.dev) != HAL_SPI_STATE_READY)
-            {
-            }
-//            if(HAL_SPI_TransmitReceive(devices[ad_adc]->spi_dev.dev, datas[ad_adc], datas[ad_adc], uint8_ad_chan_number*4,5000) != HAL_OK)
-            if(HAL_SPI_TransmitReceive_DMA(devices[ad_adc]->spi_dev.dev, (uint8_t*)(&addata24s[ad_adc]), (uint8_t*)(&addata24s[ad_adc]), sizeof(struct ADData24)) != HAL_OK)
-//                if(HAL_SPI_TransmitReceive_DMA(devices[ad_adc]->spi_dev.dev, datas[ad_adc], datas[ad_adc], uint8_ad_chan_number*4) != HAL_OK)
-            {
-              Error_Handler();
-            }
-            while (HAL_SPI_GetState(devices[ad_adc]->spi_dev.dev) != HAL_SPI_STATE_READY)
-            {
-            }
+              while (HAL_SPI_GetState(devices[ad_adc]->spi_dev.dev) != HAL_SPI_STATE_READY)
+              {
+              }
+          	if(SPI_NSS_SOFTWARE)
+          	{
+          	    setCS(&devices[ad_adc]->spi_dev, LOW);
+          	}
+              if(SPI_DMA)
+              {
+  //                if(HAL_SPI_TransmitReceive_DMA(devices[ad_adc]->spi_dev.dev, datas[ad_adc], datas[ad_adc], uint8_ad_chan_number*4) != HAL_OK)
+                  if(HAL_SPI_TransmitReceive_DMA(devices[ad_adc]->spi_dev.dev, (uint8_t*)(&addata24s[ad_adc]), (uint8_t*)(&addata24s[ad_adc]), uint8_ad_chan_number*4) != HAL_OK)
+                  {
+                    Error_Handler();
+                  }
+              } else {
+  //                if(HAL_SPI_TransmitReceive(devices[ad_adc]->spi_dev.dev, datas[ad_adc], datas[ad_adc], uint8_ad_chan_number*4,5000) != HAL_OK)
+                  if(HAL_SPI_TransmitReceive(devices[ad_adc]->spi_dev.dev, (uint8_t*)(&addata24s[ad_adc]), (uint8_t*)(&addata24s[ad_adc]), uint8_ad_chan_number*4,5000) != HAL_OK)
+                  {
+                    Error_Handler();
+                  }
+              }
+              	if(SPI_NSS_SOFTWARE)
+              	{
+              	    setCS(&devices[ad_adc]->spi_dev, HIGH);
+              	}
+              while (HAL_SPI_GetState(devices[ad_adc]->spi_dev.dev) != HAL_SPI_STATE_READY)
+              {
+              }
           }
 
         if(1)
@@ -10794,7 +10813,7 @@ static void MX_SPI2_Init(void)
   hspi2.Init.DataSize = SPI_DATASIZE_8BIT;
   hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi2.Init.CLKPhase = SPI_PHASE_2EDGE;
-  hspi2.Init.NSS = SPI_NSS_HARD_OUTPUT;
+  hspi2.Init.NSS = SPI_NSS_SOFT;
   hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4;
   hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
@@ -10842,7 +10861,7 @@ static void MX_SPI3_Init(void)
   hspi3.Init.DataSize = SPI_DATASIZE_8BIT;
   hspi3.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi3.Init.CLKPhase = SPI_PHASE_2EDGE;
-  hspi3.Init.NSS = SPI_NSS_HARD_OUTPUT;
+  hspi3.Init.NSS = SPI_NSS_SOFT;
   hspi3.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4;
   hspi3.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi3.Init.TIMode = SPI_TIMODE_DISABLE;
@@ -10890,7 +10909,7 @@ static void MX_SPI4_Init(void)
   hspi4.Init.DataSize = SPI_DATASIZE_8BIT;
   hspi4.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi4.Init.CLKPhase = SPI_PHASE_2EDGE;
-  hspi4.Init.NSS = SPI_NSS_HARD_OUTPUT;
+  hspi4.Init.NSS = SPI_NSS_SOFT;
   hspi4.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4;
   hspi4.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi4.Init.TIMode = SPI_TIMODE_DISABLE;
@@ -10938,7 +10957,7 @@ static void MX_SPI5_Init(void)
   hspi5.Init.DataSize = SPI_DATASIZE_8BIT;
   hspi5.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi5.Init.CLKPhase = SPI_PHASE_2EDGE;
-  hspi5.Init.NSS = SPI_NSS_HARD_OUTPUT;
+  hspi5.Init.NSS = SPI_NSS_SOFT;
   hspi5.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4;
   hspi5.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi5.Init.TIMode = SPI_TIMODE_DISABLE;
@@ -11240,7 +11259,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOF, SPI5_NSS4_Pin|SPI5_NSS3_Pin|SPI5_NSS2_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOF, SPI5_NSS4_Pin|SPI5_NSS3_Pin|SPI5_NSS2_Pin|SPI5_NSS_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(ISO_USB_PIN_GPIO_Port, ISO_USB_PIN_Pin, GPIO_PIN_SET);
@@ -11249,16 +11268,22 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOA, SPI2_NSS2_Pin|SPI2_NSS3_Pin|SPI2_NSS4_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(SPI4_NSS2_GPIO_Port, SPI4_NSS2_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOE, SPI4_NSS_Pin|SPI4_NSS2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, SPI4_NSS3_Pin|SPI4_NSS4_Pin|ACC_SDO_SAO_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOG, SPI6_NSS4_Pin|SPI6_NSS3_Pin|SPI6_NSS2_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(SPI2_NSS_GPIO_Port, SPI2_NSS_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOD, SPI3_NSS2_Pin|SPI3_NSS4_Pin|ADC1_SYNC_RESET_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOG, SPI6_NSS4_Pin|SPI6_NSS3_Pin|SPI6_NSS2_Pin|SPI6_NSS_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(SPI3_NSS_GPIO_Port, SPI3_NSS_Pin, GPIO_PIN_SET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOD, SPI3_NSS2_Pin|SPI3_NSS3_Pin|SPI3_NSS4_Pin|ADC1_SYNC_RESET_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : ADC2_DRDY_Pin */
   GPIO_InitStruct.Pin = ADC2_DRDY_Pin;
@@ -11266,8 +11291,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(ADC2_DRDY_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : SPI5_NSS4_Pin SPI5_NSS3_Pin SPI5_NSS2_Pin */
-  GPIO_InitStruct.Pin = SPI5_NSS4_Pin|SPI5_NSS3_Pin|SPI5_NSS2_Pin;
+  /*Configure GPIO pins : SPI5_NSS4_Pin SPI5_NSS3_Pin SPI5_NSS2_Pin SPI5_NSS_Pin */
+  GPIO_InitStruct.Pin = SPI5_NSS4_Pin|SPI5_NSS3_Pin|SPI5_NSS2_Pin|SPI5_NSS_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -11286,8 +11311,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(ISO_USB_PIN_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : SPI2_NSS2_Pin SPI2_NSS3_Pin SPI2_NSS4_Pin */
-  GPIO_InitStruct.Pin = SPI2_NSS2_Pin|SPI2_NSS3_Pin|SPI2_NSS4_Pin;
+  /*Configure GPIO pins : SPI2_NSS2_Pin SPI2_NSS3_Pin SPI2_NSS4_Pin SPI3_NSS_Pin */
+  GPIO_InitStruct.Pin = SPI2_NSS2_Pin|SPI2_NSS3_Pin|SPI2_NSS4_Pin|SPI3_NSS_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -11305,15 +11330,15 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(BOOT1_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : SPI4_NSS2_Pin */
-  GPIO_InitStruct.Pin = SPI4_NSS2_Pin;
+  /*Configure GPIO pins : SPI4_NSS_Pin SPI4_NSS2_Pin */
+  GPIO_InitStruct.Pin = SPI4_NSS_Pin|SPI4_NSS2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(SPI4_NSS2_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : SPI4_NSS3_Pin SPI4_NSS4_Pin ACC_SDO_SAO_Pin */
-  GPIO_InitStruct.Pin = SPI4_NSS3_Pin|SPI4_NSS4_Pin|ACC_SDO_SAO_Pin;
+  /*Configure GPIO pins : SPI4_NSS3_Pin SPI4_NSS4_Pin SPI2_NSS_Pin ACC_SDO_SAO_Pin */
+  GPIO_InitStruct.Pin = SPI4_NSS3_Pin|SPI4_NSS4_Pin|SPI2_NSS_Pin|ACC_SDO_SAO_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -11325,8 +11350,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(ADC4_DRDY_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : SPI6_NSS4_Pin SPI6_NSS3_Pin SPI6_NSS2_Pin */
-  GPIO_InitStruct.Pin = SPI6_NSS4_Pin|SPI6_NSS3_Pin|SPI6_NSS2_Pin;
+  /*Configure GPIO pins : SPI6_NSS4_Pin SPI6_NSS3_Pin SPI6_NSS2_Pin SPI6_NSS_Pin */
+  GPIO_InitStruct.Pin = SPI6_NSS4_Pin|SPI6_NSS3_Pin|SPI6_NSS2_Pin|SPI6_NSS_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -11346,8 +11371,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF0_MCO;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : SPI3_NSS2_Pin SPI3_NSS4_Pin ADC1_SYNC_RESET_Pin */
-  GPIO_InitStruct.Pin = SPI3_NSS2_Pin|SPI3_NSS4_Pin|ADC1_SYNC_RESET_Pin;
+  /*Configure GPIO pins : SPI3_NSS2_Pin SPI3_NSS3_Pin SPI3_NSS4_Pin ADC1_SYNC_RESET_Pin */
+  GPIO_InitStruct.Pin = SPI3_NSS2_Pin|SPI3_NSS3_Pin|SPI3_NSS4_Pin|ADC1_SYNC_RESET_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;

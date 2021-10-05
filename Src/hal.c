@@ -50,7 +50,7 @@
 // Internal function prototypes
 //
 //****************************************************************************
-void InitGPIO(ads131m0x_dev *dev);
+void InitGPIO(ads131m0x_dev *dev, bool reset);
 void InitSPI(spi_device *spi_dev);
 void GPIO_DRDY_IRQHandler(void);
 
@@ -87,10 +87,7 @@ uint16_t InitADC(ads131m0x_dev *dev, bool reset)
     // IMPORTANT: Make sure device is powered before setting GPIOs pins to HIGH state.
 
     // Initialize GPIOs pins used by ADS131M0x
-	if(reset)
-	{
-	    InitGPIO(dev);
-	}
+    InitGPIO(dev, reset);
 
     // Initialize SPI peripheral used by ADS131M0x
     InitSPI(&dev->spi_dev);
@@ -187,7 +184,7 @@ void delay_us(const uint32_t delay_time_us)
 //! \return None.
 //
 //*****************************************************************************
-void InitGPIO(ads131m0x_dev *dev)
+void InitGPIO(ads131m0x_dev *dev, bool reset)
 {
     /* --- INSERT YOUR CODE HERE --- */
     // NOTE: Not all hardware implementations may control each of these pins...
@@ -201,7 +198,10 @@ void InitGPIO(ads131m0x_dev *dev)
     /* Configure the GPIO for 'nSYNC_nRESET' as output and set high */
 //    MAP_GPIOPinTypeGPIOOutput(nSYNC_nRESET_PORT, nSYNC_nRESET_PIN);
 //    MAP_GPIOPinWrite(nSYNC_nRESET_PORT, nSYNC_nRESET_PIN, nSYNC_nRESET_PIN);
-	MAP_GPIOPinWrite(nSYNC_nRESET_PORT, nSYNC_nRESET_PIN, HIGH);
+	if(reset)
+	{
+		MAP_GPIOPinWrite(nSYNC_nRESET_PORT, nSYNC_nRESET_PIN, HIGH);
+	}
 
     /* Configure the GPIO for 'nCS' as output and set high */
 //    MAP_GPIOPinTypeGPIOOutput(nCS_PORT, nCS_PIN);
@@ -334,15 +334,22 @@ void setCS(spi_device *spi_dev, const bool state)
     /* --- INSERT YOUR CODE HERE --- */
 
     // td(CSSC) delay
-//    if(state) { SysCtlDelay(2); }
+    if(state) {
+//    	SysCtlDelay(2);
+//    	delay_us(1);
+    }
 
-    uint8_t value = (uint8_t) (state ? HIGH : LOW);
+    uint8_t value = (uint8_t) (state ? GPIO_PIN_SET : GPIO_PIN_RESET);
     MAP_GPIOPinWrite(spi_dev->chip_select_port, spi_dev->chip_select_pin, value);
+//    MAP_GPIOPinWrite(spi_dev->chip_select_port, spi_dev->chip_select_pin, value);
 //    uint8_t value = (uint8_t) (state ? nCS_PIN : 0);
 //    MAP_GPIOPinWrite(nCS_PORT, nCS_PIN, value);
 
     // td(SCCS) delay
-//    if(!state) { SysCtlDelay(2); }
+    if(!state) {
+//    	SysCtlDelay(2);
+//    	delay_us(1);
+    }
 }
 
 
@@ -656,9 +663,9 @@ uint8_t spiSendReceiveByte(spi_device *spi_dev, const uint8_t dataTx)
     // Remove any residual or old data from the receive FIFO
     uint32_t junk;
 //    while (SSIDataGetNonBlocking(SSI_BASE_ADDR, &junk));
-    while (HAL_SPI_GetState(spi_dev->dev) != HAL_SPI_STATE_READY)
-    {
-    }
+//    while (HAL_SPI_GetState(spi_dev->dev) != HAL_SPI_STATE_READY)
+//    {
+//    }
 
     // SSI TX & RX
     uint8_t dataRx;
@@ -687,9 +694,9 @@ uint8_t spiSendReceiveByte(spi_device *spi_dev, const uint8_t dataTx)
 //    	}
     }
 
-    while (HAL_SPI_GetState(spi_dev->dev) != HAL_SPI_STATE_READY)
-    {
-    }
+//    while (HAL_SPI_GetState(spi_dev->dev) != HAL_SPI_STATE_READY)
+//    {
+//    }
 
     return dataRx;
 }
