@@ -414,11 +414,11 @@ void Error_Handler(void);
 #define UART_DMA (1)
 //#define UART_DMA (0)
 
-#define SPI_DMA (1)
-//#define SPI_DMA (0)
+//#define SPI_DMA (1)
+#define SPI_DMA (0)
 
-//#define SPI_NSS_SOFTWARE (1)
-#define SPI_NSS_SOFTWARE (0)
+#define SPI_NSS_SOFTWARE (1)
+//#define SPI_NSS_SOFTWARE (0)
 
 #define SAI_DMA (1)
 //#define SAI_DMA (0)
